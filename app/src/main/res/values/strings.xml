@@ -2,22 +2,39 @@
     <string name="app_name">Popular Movies</string>
 
     <string name="action_settings">Settings</string>
-    <string name="movie_detail">Movie Detail</string>
+
 
     <string name="no_connection">You have disconnected. Please check your internet connection and try again.</string>
-    <string name="error_message">Failed to get results. Please try again.</string>
+    <string name="error_message">Failed to get results.\nPlease try again.</string>
 
     <string name="pref_sort_label">Sort Order</string>
     <string name="pref_sort_label_most_popular">Most Popular</string>
     <string name="pref_sort_label_top_rated">Top Rated</string>
+    <string name="pref_sort_label_favorites">Favorites</string>
 
     <!-- Key name for sort preference in SharedPreferences -->
     <string name="pref_sort_key" translatable="false">sort</string>
 
     <string name="pref_sort_most_popular_value" translatable="false">popular</string>
-    <string name="pref_sort_top_rated_value" translatable="false">top_rated</string>
+    <string name="pref_sort_top_rated_value"    translatable="false">top_rated</string>
+    <string name="pref_sort_favorites_value"    translatable="false">favorites</string>
 
     <!-- Detail Activity-->
+    <string name="movie_detail">Movie Detail</string>
+    <string name="txt_trailers_label">Trailers:</string>
+    <string name="txt_reviews_label">Reviews:</string>
+
+    <string name="fake_trailer_label">Trailer 1</string>
+    <string name="fake_movie_name">Chappie</string>
+    <string name="fake_movie_year">2015</string>
+    <string name="fake_movie_duration">120min</string>
+    <string name="fake_movie_vote_Average">8.1/10</string>
+    <string name="fake_movie_overview">Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Chappie he is a robot.</string>
+
+
 
     <!-- Content descriptions-->
+
+
+    <string name="content_authority" translatable="false">com.example.android.popularmovies</string>
 </resources>

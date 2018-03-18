@@ -19,11 +19,10 @@ public class NetworkUtils
 {
     private final static String THEMOVIEDB_URL = "https://api.themoviedb.org/3/movie/";
     private final static String PARAM_API_KEY  = "api_key";
-    //private final static String api_key        = "236ea5f4f3a019fafebf2f24b5af5515";
 
     private static final String API_KEY = BuildConfig.API_KEY;
-
     private static final String LOG_TAG = NetworkUtils.class.getSimpleName();
+
 
 
     public static URL buildUrl(String paramType)
@@ -50,6 +49,37 @@ public class NetworkUtils
 
         return url;
     }
+
+
+
+
+    public static URL buildUrlVideosReviews(String movieID, String paramType)
+    {
+        if(API_KEY.length() == 0 || API_KEY.isEmpty())
+        {
+            Log.e(LOG_TAG, " Please enter API KEY!");
+        }
+
+        Uri builtUri = Uri.parse(THEMOVIEDB_URL).buildUpon()
+                .appendPath(movieID)
+                .appendPath(paramType)
+                .appendQueryParameter(PARAM_API_KEY, API_KEY)
+                .build();
+
+        URL url = null;
+        try
+        {
+            url = new URL(builtUri.toString());
+        }
+        catch (MalformedURLException e)
+        {
+            e.printStackTrace();
+        }
+
+        return url;
+    }
+
+
 
     /**
      * This method returns the entire result from the HTTP response.

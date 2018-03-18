@@ -6,37 +6,36 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.TextView;
 
-import com.example.android.popularmovies.model.Movies;
-import com.squareup.picasso.Picasso;
+import com.example.android.popularmovies.model.Trailers;
 
 import java.util.List;
 
 
-public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdapterViewHolder>
+public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerAdapterViewHolder>
 {
     private final Context mContext;
-    final private MoviesAdapterOnClickHandler mClickHandler;
-    private List<Movies> mMovies;
+    final private TrailerAdapterOnClickHandler mClickHandler;
+    private List<Trailers> mTrailers;
 
     /**
      * The interface that receives onClick messages.
      */
-    public interface MoviesAdapterOnClickHandler
+    public interface TrailerAdapterOnClickHandler
     {
-        void onClickMovieAdapter(int clickedItemIndex);
+        void onClickTrailer(int clickedItemIndex);
     }
 
 
     /**
-     * Creates a MoviesAdapter.
+     * Creates a TrailerAdapter.
      *
      * @param context      Used to talk to the UI and app resources
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
-    public MoviesAdapter(@NonNull Context context, MoviesAdapterOnClickHandler clickHandler)
+    public TrailerAdapter(@NonNull Context context, TrailerAdapterOnClickHandler clickHandler)
     {
         mContext = context;
         mClickHandler = clickHandler;
@@ -49,20 +48,20 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * @param viewGroup The ViewGroup that these ViewHolders are contained within.
      * @param viewType  If your RecyclerView has more than one type of item (like ours does) you
      *                  can use this viewType integer to provide a different layout. See
-     *                  {@link android.support.v7.widget.RecyclerView.Adapter#getItemViewType(int)}
+     *                  {@link RecyclerView.Adapter#getItemViewType(int)}
      *                  for more details.
-     * @return A new MoviesAdapterViewHolder that holds the View for each list item
+     * @return A new TrailerAdapterViewHolder that holds the View for each list item
      */
     @NonNull
     @Override
-    public MoviesAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType)
+    public TrailerAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType)
     {
-        int layoutId = R.layout.movie_item;
+        int layoutId = R.layout.trailers_item;
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(layoutId, viewGroup, false);
         view.setFocusable(true);
 
-        return new MoviesAdapterViewHolder(view);
+        return new TrailerAdapterViewHolder(view);
     }
 
     /**
@@ -71,22 +70,14 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * details for this particular position, using the "position" argument that is conveniently
      * passed into us.
      *
-     * @param moviesAdapterViewHolder The ViewHolder which should be updated to represent the
+     * @param trailerAdapterViewHolder The ViewHolder which should be updated to represent the
      *                                  contents of the item at the given position in the data set.
      * @param position                  The position of the item within the adapter's data set.
      */
     @Override
-    public void onBindViewHolder(@NonNull MoviesAdapterViewHolder moviesAdapterViewHolder, int position)
+    public void onBindViewHolder(@NonNull TrailerAdapterViewHolder trailerAdapterViewHolder, int position)
     {
-
-        mMovies.get(position);
-
-        Picasso.get()
-                .load(mMovies.get(position).getPosterPath())
-                .placeholder(R.drawable.user_placeholder)
-                .error(R.drawable.user_placeholder_error)
-                .into(moviesAdapterViewHolder.posterView);
-
+      trailerAdapterViewHolder.trailerName.setText(mTrailers.get(position).getName());
     }
 
     /**
@@ -98,22 +89,22 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     @Override
     public int getItemCount()
     {
-        if (null == mMovies) return 0;
-        return mMovies.size();
+        if (null == mTrailers) return 0;
+        return mTrailers.size();
     }
 
 
     /**
-     * Swaps the Movies used by the MoviesAdapter for its movie data. This method is called by
+     * Swaps the Movies used by the TrailerAdapter for its movie data. This method is called by
      * MainActivity after a load has finished, as well as when the Loader responsible for loading
      * the movie data is reset. When this method is called, we assume we have a completely new
      * set of data, so we call notifyDataSetChanged to tell the RecyclerView to update.
      *
-     * @param newMovies the new cursor to use as ForecastAdapter's data source
+     * @param newTrailers the new cursor to use as ForecastAdapter's data source
      */
-    void swapMovie(List<Movies> newMovies)
+    void swapMovie(List<Trailers> newTrailers)
     {
-        mMovies = newMovies;
+        mTrailers = newTrailers;
         notifyDataSetChanged();
     }
 
@@ -124,15 +115,15 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * a cache of the child views for a forecast item. It's also a convenient place to set an
      * OnClickListener, since it has access to the adapter and the views.
      */
-    class MoviesAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+    class TrailerAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
     {
-        final ImageView posterView;
+        final TextView trailerName;
 
-        MoviesAdapterViewHolder(View view)
+        TrailerAdapterViewHolder(View view)
         {
             super(view);
 
-            posterView = view.findViewById(R.id.movie_image);
+            trailerName = view.findViewById(R.id.txt_trailer_name);
             view.setOnClickListener(this);
         }
 
@@ -145,7 +136,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         public void onClick(View v)
         {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onClickMovieAdapter(adapterPosition);
+            mClickHandler.onClickTrailer(adapterPosition);
         }
     }
 }

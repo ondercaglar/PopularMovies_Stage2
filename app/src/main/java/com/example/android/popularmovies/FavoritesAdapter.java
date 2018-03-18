@@ -1,6 +1,7 @@
 package com.example.android.popularmovies;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -8,35 +9,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-import com.example.android.popularmovies.model.Movies;
 import com.squareup.picasso.Picasso;
 
-import java.util.List;
 
-
-public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdapterViewHolder>
+public class FavoritesAdapter extends RecyclerView.Adapter<FavoritesAdapter.FavoritesAdapterViewHolder>
 {
     private final Context mContext;
-    final private MoviesAdapterOnClickHandler mClickHandler;
-    private List<Movies> mMovies;
+    final private FavoritesAdapterOnClickHandler mClickHandler;
+    private Cursor mCursor;
 
     /**
      * The interface that receives onClick messages.
      */
-    public interface MoviesAdapterOnClickHandler
+    public interface FavoritesAdapterOnClickHandler
     {
-        void onClickMovieAdapter(int clickedItemIndex);
+        void onClickFavoritesAdapter(int clickedItemIndex);
     }
 
 
     /**
-     * Creates a MoviesAdapter.
+     * Creates a FavoritesAdapter.
      *
      * @param context      Used to talk to the UI and app resources
      * @param clickHandler The on-click handler for this adapter. This single handler is called
      *                     when an item is clicked.
      */
-    public MoviesAdapter(@NonNull Context context, MoviesAdapterOnClickHandler clickHandler)
+    public FavoritesAdapter(@NonNull Context context, FavoritesAdapterOnClickHandler clickHandler)
     {
         mContext = context;
         mClickHandler = clickHandler;
@@ -49,20 +47,20 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * @param viewGroup The ViewGroup that these ViewHolders are contained within.
      * @param viewType  If your RecyclerView has more than one type of item (like ours does) you
      *                  can use this viewType integer to provide a different layout. See
-     *                  {@link android.support.v7.widget.RecyclerView.Adapter#getItemViewType(int)}
+     *                  {@link RecyclerView.Adapter#getItemViewType(int)}
      *                  for more details.
-     * @return A new MoviesAdapterViewHolder that holds the View for each list item
+     * @return A new FavoritesAdapterViewHolder that holds the View for each list item
      */
     @NonNull
     @Override
-    public MoviesAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType)
+    public FavoritesAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType)
     {
         int layoutId = R.layout.movie_item;
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(layoutId, viewGroup, false);
         view.setFocusable(true);
 
-        return new MoviesAdapterViewHolder(view);
+        return new FavoritesAdapterViewHolder(view);
     }
 
     /**
@@ -71,21 +69,20 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * details for this particular position, using the "position" argument that is conveniently
      * passed into us.
      *
-     * @param moviesAdapterViewHolder The ViewHolder which should be updated to represent the
+     * @param favoritesAdapterViewHolder The ViewHolder which should be updated to represent the
      *                                  contents of the item at the given position in the data set.
      * @param position                  The position of the item within the adapter's data set.
      */
     @Override
-    public void onBindViewHolder(@NonNull MoviesAdapterViewHolder moviesAdapterViewHolder, int position)
+    public void onBindViewHolder(@NonNull FavoritesAdapterViewHolder favoritesAdapterViewHolder, int position)
     {
-
-        mMovies.get(position);
+        mCursor.moveToPosition(position);
 
         Picasso.get()
-                .load(mMovies.get(position).getPosterPath())
+                .load(mCursor.getString(MainScreen.INDEX_POSTER_PATH))
                 .placeholder(R.drawable.user_placeholder)
                 .error(R.drawable.user_placeholder_error)
-                .into(moviesAdapterViewHolder.posterView);
+                .into(favoritesAdapterViewHolder.posterView);
 
     }
 
@@ -98,22 +95,22 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     @Override
     public int getItemCount()
     {
-        if (null == mMovies) return 0;
-        return mMovies.size();
+        if (null == mCursor) return 0;
+        return mCursor.getCount();
     }
 
 
     /**
-     * Swaps the Movies used by the MoviesAdapter for its movie data. This method is called by
+     * Swaps the Movies used by the FavoritesAdapter for its movie data. This method is called by
      * MainActivity after a load has finished, as well as when the Loader responsible for loading
      * the movie data is reset. When this method is called, we assume we have a completely new
      * set of data, so we call notifyDataSetChanged to tell the RecyclerView to update.
      *
-     * @param newMovies the new cursor to use as ForecastAdapter's data source
+     * @param newCursor the new cursor to use as ForecastAdapter's data source
      */
-    void swapMovie(List<Movies> newMovies)
+    void swapMovie(Cursor newCursor)
     {
-        mMovies = newMovies;
+        mCursor = newCursor;
         notifyDataSetChanged();
     }
 
@@ -124,11 +121,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * a cache of the child views for a forecast item. It's also a convenient place to set an
      * OnClickListener, since it has access to the adapter and the views.
      */
-    class MoviesAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+    class FavoritesAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
     {
         final ImageView posterView;
 
-        MoviesAdapterViewHolder(View view)
+        FavoritesAdapterViewHolder(View view)
         {
             super(view);
 
@@ -145,7 +142,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         public void onClick(View v)
         {
             int adapterPosition = getAdapterPosition();
-            mClickHandler.onClickMovieAdapter(adapterPosition);
+            mClickHandler.onClickFavoritesAdapter(adapterPosition);
         }
     }
 }
