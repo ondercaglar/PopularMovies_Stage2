@@ -23,6 +23,7 @@
         <activity
             android:name=".MovieDetailActivity"
             android:label="@string/movie_detail"
+            android:theme="@style/Theme.DesignDemo"
             android:parentActivityName=".MainScreen"
             tools:targetApi="jelly_bean">
             <meta-data
@@ -30,16 +31,6 @@
                 android:value=".MainScreen" />
         </activity>
 
-
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/action_settings"
-            android:parentActivityName=".MainScreen"
-            tools:targetApi="jelly_bean">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainScreen" />
-        </activity>
 
         <!-- Our ContentProvider -->
         <provider

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:title="@string/pref_sort_label"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/most_popular"
+                    android:title="@string/pref_sort_label_most_popular" />
+                <item
+                    android:id="@+id/top_rated"
+                    android:title="@string/pref_sort_label_top_rated" />
+                <item
+                    android:id="@+id/favorites"
+                    android:title="@string/pref_sort_label_favorites" />
+            </group>
+        </menu>
+    </item>
+
+</menu>

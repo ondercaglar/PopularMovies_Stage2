@@ -46,7 +46,8 @@ public class MoviesProvider extends ContentProvider
      * been tested and proven, you should almost always use it unless there is a compelling
      * reason not to.
      *
-     * @return A UriMatcher that correctly matches the constants for CODE_MOVIE and CODE_MOVIE_WITH_ID
+     * @return A UriMatcher that correctly matches the constants for CODE_MOVIE and
+     * CODE_MOVIE_WITH_ID
      */
     private static UriMatcher buildUriMatcher() {
 
@@ -63,7 +64,8 @@ public class MoviesProvider extends ContentProvider
         matcher.addURI(authority, MoviesContract.PATH_MOVIE, CODE_MOVIE);
 
         /*
-         * This URI would look something like content://com.example.android.popularmovies/movie/1472214172
+         * This URI would look something like
+         * content://com.example.android.popularmovies/movie/1472214172
          * The "/#" signifies to the UriMatcher that if PATH_MOVIE is followed by ANY number,
          * that it should return the CODE_MOVIE_WITH_ID code
          */
@@ -145,7 +147,7 @@ public class MoviesProvider extends ContentProvider
                 long id = db.insert(TABLE_NAME, null, values);
                 if ( id > 0 )
                 {
-                    returnUri = ContentUris.withAppendedId(MoviesContract.MovieEntry.CONTENT_URI, id);
+                  returnUri = ContentUris.withAppendedId(MoviesContract.MovieEntry.CONTENT_URI, id);
                 }
                 else
                 {
@@ -183,7 +185,8 @@ public class MoviesProvider extends ContentProvider
      * @return A Cursor containing the results of the query. In our implementation,
      */
     @Override
-    public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder)
+    public Cursor query(@NonNull Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder)
     {
 
         // Get access to underlying database (read-only for query)
@@ -337,7 +340,7 @@ public class MoviesProvider extends ContentProvider
      * return an image URI from this method.
      *
      * @param uri the URI to query.
-     * @return nothing in PopularMovies, but normally a MIME type string, or null if there is no type.
+     * @return nothing in PopularMovies, but normally a MIME type string or null if there is no type.
      */
     @Override
     public String getType(@NonNull Uri uri)
@@ -348,10 +351,12 @@ public class MoviesProvider extends ContentProvider
         {
             case CODE_MOVIE:
                 // directory
-                return "vnd.android.cursor.dir" + "/" + CONTENT_AUTHORITY + "/" + MoviesContract.PATH_MOVIE;
+                return "vnd.android.cursor.dir" + "/" + CONTENT_AUTHORITY + "/"
+                        + MoviesContract.PATH_MOVIE;
             case CODE_MOVIE_WITH_ID:
                 // single item type
-                return "vnd.android.cursor.item" + "/" + CONTENT_AUTHORITY + "/" + MoviesContract.PATH_MOVIE;
+                return "vnd.android.cursor.item" + "/" + CONTENT_AUTHORITY + "/"
+                        + MoviesContract.PATH_MOVIE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -360,7 +365,8 @@ public class MoviesProvider extends ContentProvider
 
 
     @Override
-    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs)
+    public int update(@NonNull Uri uri, ContentValues values, String selection,
+                      String[] selectionArgs)
     {
         //Keep track of if an update occurs
         int moviessUpdated;
@@ -374,7 +380,8 @@ public class MoviesProvider extends ContentProvider
                 //update a single reminder by getting the id
                 String id = uri.getPathSegments().get(1);
                 //using selections
-                moviessUpdated = mOpenHelper.getWritableDatabase().update(TABLE_NAME, values, "_id=?", new String[]{id});
+                moviessUpdated = mOpenHelper.getWritableDatabase().update(TABLE_NAME, values,
+                        "_id=?", new String[]{id});
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);

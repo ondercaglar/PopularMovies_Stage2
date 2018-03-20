@@ -6,7 +6,11 @@
 
 
     <color name="colorTextBackground">#008b7d</color>
-    <color name="colorWhite">#FFFFFF</color>
     <color name="colorBlack">#000000</color>
+    <color name="colorGreen">#7BE0D6</color>
+
+
+
+
 
 </resources>

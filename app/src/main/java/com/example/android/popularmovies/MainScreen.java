@@ -32,10 +32,12 @@ import com.facebook.stetho.Stetho;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
+import java.util.ArrayList;
 
-public class MainScreen extends AppCompatActivity  implements LoaderManager.LoaderCallbacks, SharedPreferences.OnSharedPreferenceChangeListener,
-        MoviesAdapter.MoviesAdapterOnClickHandler, FavoritesAdapter.FavoritesAdapterOnClickHandler
+public class MainScreen extends AppCompatActivity  implements LoaderManager.LoaderCallbacks,
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        MoviesAdapter.MoviesAdapterOnClickHandler,
+        FavoritesAdapter.FavoritesAdapterOnClickHandler
 {
 
     private static final String[] MAIN_MOVIES_PROJECTION =
@@ -68,18 +70,21 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
 
     private MoviesAdapter moviesAdapter;
     private FavoritesAdapter favoritesAdapter;
-    private int mPosition = RecyclerView.NO_POSITION;
-
-
     private static final String QUERY_URL = "query";
-    private Cursor mCursor;
+
 
     /*
      * This number will uniquely identify our Loader and is chosen arbitrarily.
      */
     private static final int THE_MOVIE_DB_LOADER = 22;
     private static final int ID_FAVORITES_LOADER = 44;
-    private List<Movies> moviesList;
+    private ArrayList<Movies> moviesList;
+    private Cursor mCursor;
+
+    //private Parcelable savedRecyclerLayoutState;
+    //private static final String RECYCLER_MOVIES = "recycler_movies";
+    private static final String STATE_KEY = "state_key";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -95,14 +100,55 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
         mainBinding.recyclerviewMovies.setHasFixedSize(true);
 
         setupSharedPreferences();
-        makeTheMovieDbSearchQuery();
+
+        if (savedInstanceState != null &&
+                !SORT_PARAM.equals(getString(R.string.pref_sort_favorites_value)))
+        {
+            moviesAdapter = new MoviesAdapter(this, this);
+            mainBinding.recyclerviewMovies.setAdapter(moviesAdapter);
+            moviesList = savedInstanceState.getParcelableArrayList(STATE_KEY);
+            moviesAdapter.swapMovie(moviesList);
+            /*
+            savedRecyclerLayoutState = savedInstanceState.getParcelable(RECYCLER_MOVIES);
+            if(savedRecyclerLayoutState!=null)
+            {
+                mainBinding.recyclerviewMovies.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+            }*/
+        }
+        else
+        {
+            makeTheMovieDbSearchQuery();
+        }
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        //outState.putParcelable(RECYCLER_MOVIES, mainBinding.recyclerviewMovies.getLayoutManager().onSaveInstanceState());
+        outState.putParcelableArrayList(STATE_KEY, moviesList);
+    }
+
+
+    /*
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState)
+    {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null)
+        {
+            savedRecyclerLayoutState = savedInstanceState.getParcelable(RECYCLER_MOVIES);
+        }
+    }*/
+
 
 
     private void setupSharedPreferences()
     {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        SORT_PARAM = sharedPreferences.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_most_popular_value));
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        SORT_PARAM = sharedPreferences.getString(getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_most_popular_value));
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -112,11 +158,11 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
     {
         if (key.equals(getString(R.string.pref_sort_key)))
         {
-            SORT_PARAM = sharedPreferences.getString(getString(R.string.pref_sort_key), getString(R.string.pref_sort_most_popular_value));
+            SORT_PARAM = sharedPreferences.getString(getString(R.string.pref_sort_key),
+                    getString(R.string.pref_sort_most_popular_value));
             makeTheMovieDbSearchQuery();
         }
     }
-
 
     @Override
     protected void onDestroy()
@@ -148,13 +194,11 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
                 return;
             }
 
-
             moviesAdapter = new MoviesAdapter(this, this);
             mainBinding.recyclerviewMovies.setAdapter(moviesAdapter);
 
             // Initialize the loader
             getSupportLoaderManager().initLoader(THE_MOVIE_DB_LOADER, null, this);
-
 
             URL TheMovieDbSearchUrl = NetworkUtils.buildUrl(SORT_PARAM);
             Bundle queryBundle = new Bundle();
@@ -281,8 +325,6 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
     }
 
 
-
-
     @Override
     public void onLoadFinished(@NonNull Loader loader, Object data)
     {
@@ -295,23 +337,17 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
             showErrorMessage();
         }
         else
-            {
-
+        {
             switch (loader.getId())
             {
                 case THE_MOVIE_DB_LOADER:
-
                     showJsonDataView();
                     moviesList = JsonUtils.parseMoviesJson(data.toString());
                     moviesAdapter.swapMovie(moviesList);
-                    if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
-                    mainBinding.recyclerviewMovies.smoothScrollToPosition(mPosition);
                     break;
 
                 case ID_FAVORITES_LOADER:
                     favoritesAdapter.swapMovie((Cursor) data);
-                    if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
-                    mainBinding.recyclerviewMovies.smoothScrollToPosition(mPosition);
                     if (((Cursor) data).getCount() != 0) showJsonDataView();
                     mCursor = (Cursor) data;
                     break;
@@ -343,20 +379,55 @@ public class MainScreen extends AppCompatActivity  implements LoaderManager.Load
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.movies_menu, menu);
+        getMenuInflater().inflate(R.menu.sort_menu, menu);
         return true;
     }
+
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+        if (SORT_PARAM.equals(getString(R.string.pref_sort_most_popular_value)))
+        {
+            menu.findItem(R.id.most_popular).setChecked(true);
+        }
+        else  if (SORT_PARAM.equals(getString(R.string.pref_sort_top_rated_value)))
+        {
+            menu.findItem(R.id.top_rated).setChecked(true);
+        }
+        else
+        {
+            menu.findItem(R.id.favorites).setChecked(true);
+        }
+        return true;
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        int id = item.getItemId();
-        if (id == R.id.action_settings)
+        SharedPreferences sharedPreferences =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor mPrefsEditor = sharedPreferences.edit();
+
+        switch (item.getItemId())
         {
-            Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
-            startActivity(startSettingsActivity);
-            return true;
+            case R.id.most_popular:
+                SORT_PARAM = getString(R.string.pref_sort_most_popular_value);
+                break;
+
+            case R.id.top_rated:
+                SORT_PARAM = getString(R.string.pref_sort_top_rated_value);
+                break;
+
+            case R.id.favorites:
+                SORT_PARAM =  getString(R.string.pref_sort_favorites_value);
+                break;
         }
+
+        mPrefsEditor.putString(getString(R.string.pref_sort_key), SORT_PARAM);
+        mPrefsEditor.apply();
+
         return super.onOptionsItemSelected(item);
     }
 

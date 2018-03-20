@@ -15,12 +15,18 @@ import android.support.v4.app.ShareCompat;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
 
 import com.example.android.popularmovies.databinding.ActivityDetailBinding;
 import com.example.android.popularmovies.model.Movies;
@@ -34,7 +40,8 @@ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
+import java.util.ArrayList;
+
 
 public class MovieDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks,
         TrailerAdapter.TrailerAdapterOnClickHandler, ReviewsAdapter.ReviewsAdapterOnClickHandler
@@ -42,7 +49,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     private ActivityDetailBinding detailBinding;
     private TrailerAdapter trailerAdapter;
     private ReviewsAdapter reviewsAdapter;
-    private int mPosition = RecyclerView.NO_POSITION;
 
 
     private static final String QUERY_URL_VIDEOS  = "query_videos";
@@ -55,12 +61,23 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
     private static final int THE_TRAILER_LOADER = 22;
     private static final int THE_REVIEW_LOADER = 20;
     private static final int ID_FAVORITES_LOADER = 67;
-    private List<Trailers> trailersList;
-    private List<Reviews>  reviewsList;
+    private ArrayList<Trailers> trailersList;
+    private ArrayList<Reviews>  reviewsList;
 
     private  Movies movies;
     private Cursor mCursor;
-    private Uri uriForRowClicked;
+    private Toast mToast;
+    private int mCursorSize = 0;
+
+    //private Parcelable savedRecyclerLayoutStateTrailers;
+    //private Parcelable savedRecyclerLayoutStateReviews;
+    //private static final String RECYCLER_TRAILER   = "recycler_trailer";
+    //private static final String RECYCLER_REVIEWS   = "recycler_reviews";
+    private static final String STATE_KEY_TRAILERS = "state_key_trailers";
+    private static final String STATE_KEY_REVIEWS  = "state_key_reviews";
+    private static final String STATE_KEY_MOVIES   = "state_key_movies";
+    private static final String STATE_KEY_FAVORITE = "state_key_favorite";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -68,25 +85,98 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         super.onCreate(savedInstanceState);
         detailBinding = DataBindingUtil.setContentView(this, R.layout.activity_detail);
 
-        ActionBar actionBar = this.getSupportActionBar();
+        final Toolbar toolbar = detailBinding.toolbar;
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        // Set the action bar back button to look like an up button
-        if (actionBar != null)
-        {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
 
         detailBinding.imgbtnFavorite.setOnClickListener(favoritesButtonListener);
         detailBinding.imgbtnShare.setOnClickListener(shareButtonListener);
+        detailBinding.floatingButton.setOnClickListener(fab);
 
-        movies = getIntent().getParcelableExtra("movies");
+
+        LinearLayoutManager layoutManager    = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager newLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+
+        detailBinding.trailersInfo.recyclerviewTrailers.setLayoutManager(layoutManager);
+        detailBinding.trailersInfo.recyclerviewTrailers.setHasFixedSize(true);
+
+        detailBinding.reviewsInfo.recyclerviewRevies.setLayoutManager(newLayoutManager);
+        detailBinding.reviewsInfo.recyclerviewRevies.setHasFixedSize(true);
+
+
+        if (savedInstanceState != null)
+        {
+            //savedRecyclerLayoutStateTrailers = savedInstanceState.getParcelable(RECYCLER_TRAILER);
+            //savedRecyclerLayoutStateReviews = savedInstanceState.getParcelable(RECYCLER_REVIEWS);
+            trailersList = savedInstanceState.getParcelableArrayList(STATE_KEY_TRAILERS);
+            reviewsList  = savedInstanceState.getParcelableArrayList(STATE_KEY_REVIEWS);
+            movies       = savedInstanceState.getParcelable(STATE_KEY_MOVIES);
+            mCursorSize  = savedInstanceState.getInt(STATE_KEY_FAVORITE);
+
+            configureFavoriteButton();
+
+            trailerAdapter = new TrailerAdapter(this, this);
+            detailBinding.trailersInfo.recyclerviewTrailers.setAdapter(trailerAdapter);
+
+
+            if (trailersList.size() == 0)
+            {
+                detailBinding.trailersInfo.txtTrailerLabel.setVisibility(View.GONE);
+                detailBinding.trailersInfo.recyclerviewTrailers.setVisibility(View.GONE);
+            }
+            else
+            {
+                detailBinding.imgbtnShare.setVisibility(View.VISIBLE);
+                trailerAdapter.swapMovie(trailersList);
+            }
+
+            /*
+            if(savedRecyclerLayoutStateTrailers!=null)
+            {
+                detailBinding.trailersInfo.recyclerviewTrailers.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutStateTrailers);
+            }*/
+
+
+            reviewsAdapter = new ReviewsAdapter(this, this);
+            detailBinding.reviewsInfo.recyclerviewRevies.setAdapter(reviewsAdapter);
+            if (reviewsList.size() == 0)
+            {
+                detailBinding.reviewsInfo.txtReviewsLabel.setVisibility(View.GONE);
+                detailBinding.reviewsInfo.recyclerviewRevies.setVisibility(View.GONE);
+            }
+            else
+            {
+                reviewsAdapter.swapMovie(reviewsList);
+            }
+
+            /*
+            if(savedRecyclerLayoutStateReviews!=null)
+            {
+                detailBinding.reviewsInfo.recyclerviewRevies.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutStateReviews);
+            }*/
+        }
+        else
+        {
+            movies = getIntent().getParcelableExtra("movies");
+            makeTheMovieDbSearchQuery();
+        }
+
+
 
         if(movies!=null)
         {
-            detailBinding.originalTitleTv.setText(movies.getOriginalTitle());
+            detailBinding.collapsingToolbar.setTitle(movies.getOriginalTitle());
             detailBinding.voteAverageTv.setText(movies.getVoteAverage() + "/10");
             detailBinding.releaseDateTv.setText(movies.getReleaseDate());
             detailBinding.overviewTv.setText(movies.getOverview());
+
+
+            Picasso.get()
+                    .load(movies.getBackdropPath())
+                    .placeholder(R.drawable.user_placeholder)
+                    .error(R.drawable.user_placeholder_error)
+                    .into(detailBinding.backdrop);
 
             Picasso.get()
                     .load(movies.getPosterPath())
@@ -95,52 +185,33 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                     .into(detailBinding.imageIv);
         }
 
-
-        makeTheMovieDbSearchQuery();
-
-        LinearLayoutManager layoutManager    = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        LinearLayoutManager newLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-
-        detailBinding.trailersInfo.recyclerviewTrailers.setLayoutManager(layoutManager);
-        detailBinding.trailersInfo.recyclerviewTrailers.setHasFixedSize(true);
-        trailerAdapter = new TrailerAdapter(this, this);
-        detailBinding.trailersInfo.recyclerviewTrailers.setAdapter(trailerAdapter);
-
-
-        detailBinding.reviewsInfo.recyclerviewRevies.setLayoutManager(newLayoutManager);
-        detailBinding.reviewsInfo.recyclerviewRevies.setHasFixedSize(true);
-        reviewsAdapter = new ReviewsAdapter(this, this);
-        detailBinding.reviewsInfo.recyclerviewRevies.setAdapter(reviewsAdapter);
-
-
-        uriForRowClicked =  MoviesContract.MovieEntry.buildMovieUriWithID(Long.parseLong(movies.getMovieID()));
-
-
-        // Initialize the loader
-        getSupportLoaderManager().initLoader(THE_TRAILER_LOADER,  null, this);
-        getSupportLoaderManager().initLoader(THE_REVIEW_LOADER,   null, this);
-        getSupportLoaderManager().initLoader(ID_FAVORITES_LOADER, null, this);
-
     }
 
 
-    private View.OnClickListener favoritesButtonListener = new View.OnClickListener()
+
+    private final View.OnClickListener favoritesButtonListener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
         {
-            if (mCursor.getCount() != 0)
+            if (mCursorSize!= 0)
             {
-                ContentResolver reminderContentResolver = getContentResolver();
-                reminderContentResolver.delete(uriForRowClicked, null, null);
+                ContentResolver favoriteContentResolver = getContentResolver();
+                int numRowsDeleted =  favoriteContentResolver.delete(MoviesContract.MovieEntry.
+                                buildMovieUriWithID(Long.parseLong(movies.getMovieID())),
+                        null, null);
 
-                detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_border_black_48dp);
-
+                if (numRowsDeleted != 0)
+                {
+                    detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_border_black_48dp);
+                    detailBinding.floatingButton.setImageResource(R.drawable.ic_favorite_border_black_48dp);
+                    mCursorSize = 0;
+                    showToast(getResources().getString(R.string.remove_favr));
+                }
             }
             else
             {
                 // Insert new favorite movie data via a ContentResolver
-                // Create new empty ContentValues object
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_ID,       movies.getMovieID());
                 contentValues.put(MoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE, movies.getOriginalTitle());
@@ -150,9 +221,61 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                 contentValues.put(MoviesContract.MovieEntry.COLUMN_RELEASE_DATE,   movies.getReleaseDate());
                 contentValues.put(MoviesContract.MovieEntry.COLUMN_BACKDROP_PATH,  movies.getBackdropPath());
                 // Insert the content values via a ContentResolver
-               getContentResolver().insert(MoviesContract.MovieEntry.CONTENT_URI, contentValues);
+              Uri resultsUri = getContentResolver().insert(MoviesContract.MovieEntry.CONTENT_URI, contentValues);
 
-                detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_red_500_48dp);
+                if(resultsUri != null)
+                {
+                    detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_red_500_48dp);
+                    detailBinding.floatingButton.setImageResource(R.drawable.ic_favorite_red_500_48dp);
+                    mCursorSize = 1;
+                    showToast(getResources().getString(R.string.add_favr));
+                }
+            }
+        }
+    };
+
+
+    private final View.OnClickListener fab = new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            if (mCursorSize!= 0)
+            {
+                ContentResolver favoriteContentResolver = getContentResolver();
+                int numRowsDeleted =  favoriteContentResolver.delete(MoviesContract.MovieEntry.
+                                buildMovieUriWithID(Long.parseLong(movies.getMovieID())),
+                        null, null);
+
+                if (numRowsDeleted != 0)
+                {
+                    detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_border_black_48dp);
+                    detailBinding.floatingButton.setImageResource(R.drawable.ic_favorite_border_black_48dp);
+                    mCursorSize = 0;
+                    showToast(getResources().getString(R.string.remove_favr));
+                }
+            }
+            else
+            {
+                // Insert new favorite movie data via a ContentResolver
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_ID,       movies.getMovieID());
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_ORIGINAL_TITLE, movies.getOriginalTitle());
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_POSTER_PATH,    movies.getPosterPath());
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_OVERVIEW,       movies.getOverview());
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_VOTE_AVERAGE,   movies.getVoteAverage());
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_RELEASE_DATE,   movies.getReleaseDate());
+                contentValues.put(MoviesContract.MovieEntry.COLUMN_BACKDROP_PATH,  movies.getBackdropPath());
+                // Insert the content values via a ContentResolver
+                Uri resultsUri = getContentResolver().insert(MoviesContract.MovieEntry.CONTENT_URI, contentValues);
+
+                if(resultsUri != null)
+                {
+                    detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_red_500_48dp);
+                    detailBinding.floatingButton.setImageResource(R.drawable.ic_favorite_red_500_48dp);
+                    mCursorSize = 1;
+                    showToast(getResources().getString(R.string.add_favr));
+                }
             }
         }
     };
@@ -161,19 +284,21 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
     private void configureFavoriteButton()
     {
-        if (mCursor.getCount() != 0)
+        if (  mCursorSize != 0)
         {
             detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_red_500_48dp);
+            detailBinding.floatingButton.setImageResource(R.drawable.ic_favorite_red_500_48dp);
         }
         else
         {
             detailBinding.imgbtnFavorite.setImageResource(R.drawable.ic_favorite_border_black_48dp);
+            detailBinding.floatingButton.setImageResource(R.drawable.ic_favorite_border_black_48dp);
         }
     }
 
 
 
-    private View.OnClickListener shareButtonListener = new View.OnClickListener()
+    private final View.OnClickListener shareButtonListener = new View.OnClickListener()
     {
         @Override
         public void onClick(View v)
@@ -207,8 +332,25 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
 
 
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        //outState.putParcelable(RECYCLER_TRAILER, detailBinding.trailersInfo.recyclerviewTrailers.getLayoutManager().onSaveInstanceState());
+        //outState.putParcelable(RECYCLER_REVIEWS, detailBinding.reviewsInfo.recyclerviewRevies.getLayoutManager().onSaveInstanceState());
+        outState.putParcelableArrayList(STATE_KEY_TRAILERS, trailersList);
+        outState.putParcelableArrayList(STATE_KEY_REVIEWS,  reviewsList);
+        outState.putParcelable(STATE_KEY_MOVIES, movies);
+        outState.putInt(STATE_KEY_FAVORITE, mCursorSize);
+    }
+
+
+
     private void makeTheMovieDbSearchQuery()
     {
+
+        getSupportLoaderManager().initLoader(ID_FAVORITES_LOADER, null, this);
+
         // creating connection detector class instance
         InternetConnectionDetector cd = new InternetConnectionDetector(getApplicationContext());
         Boolean isInternetPresent = cd.isConnectingToInternet();
@@ -223,6 +365,17 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             return;
         }
 
+        trailerAdapter = new TrailerAdapter(this, this);
+        detailBinding.trailersInfo.recyclerviewTrailers.setAdapter(trailerAdapter);
+
+
+        reviewsAdapter = new ReviewsAdapter(this, this);
+        detailBinding.reviewsInfo.recyclerviewRevies.setAdapter(reviewsAdapter);
+
+
+        // Initialize the loader
+        getSupportLoaderManager().initLoader(THE_TRAILER_LOADER,  null, this);
+        getSupportLoaderManager().initLoader(THE_REVIEW_LOADER,   null, this);
 
         String PARAM_VIDEOS = "videos";
         URL TrailersUrl = NetworkUtils.buildUrlVideosReviews(movies.getMovieID(), PARAM_VIDEOS);
@@ -266,7 +419,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         {
             case ID_FAVORITES_LOADER:
                 return new CursorLoader(this,
-                                        uriForRowClicked,
+                        MoviesContract.MovieEntry.buildMovieUriWithID(Long.parseLong(movies.getMovieID())),
                                         null,
                                         null,
                                         null,
@@ -386,6 +539,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
             {
                 case ID_FAVORITES_LOADER:
                     mCursor = (Cursor) data;
+                    mCursorSize = mCursor.getCount();
                     configureFavoriteButton();
                     break;
 
@@ -400,8 +554,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                 {
                     detailBinding.imgbtnShare.setVisibility(View.VISIBLE);
                     trailerAdapter.swapMovie(trailersList);
-                    if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
-                    detailBinding.trailersInfo.recyclerviewTrailers.smoothScrollToPosition(mPosition);
                 }
                 break;
 
@@ -415,8 +567,6 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
                     else
                     {
                         reviewsAdapter.swapMovie(reviewsList);
-                        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
-                        detailBinding.reviewsInfo.recyclerviewRevies.smoothScrollToPosition(mPosition);
                     }
                     break;
 
@@ -432,6 +582,7 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         trailerAdapter.swapMovie(null);
         reviewsAdapter.swapMovie(null);
         mCursor = null;
+        mCursorSize =0;
     }
 
 
@@ -482,6 +633,28 @@ public class MovieDetailActivity extends AppCompatActivity implements LoaderMana
         {
             startActivity(intent);
         }
+    }
+
+
+
+    private void showToast(String message)
+    {
+        if (mToast != null)
+        {
+            mToast.cancel();
+        }
+
+        LayoutInflater inflater = getLayoutInflater();
+        View view  = inflater.inflate(R.layout.toast_layout, (ViewGroup) findViewById(R.id.toast_layout_root));
+
+        TextView text = view.findViewById(R.id.text);
+        text.setText(message);
+
+        mToast = new Toast(getApplicationContext());
+        mToast.setGravity(Gravity.CENTER, 0, 0);
+        mToast.setDuration(Toast.LENGTH_SHORT);
+        mToast.setView(view);
+        mToast.show();
     }
 
 

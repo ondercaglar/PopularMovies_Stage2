@@ -10,7 +10,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 public class JsonUtils
@@ -38,10 +37,10 @@ public class JsonUtils
     private final static String IMAGE_URL = "http://image.tmdb.org/t/p/w185/";
 
 
-    public static   List<Movies> parseMoviesJson(String json)
+    public static   ArrayList<Movies> parseMoviesJson(String json)
     {
 
-        List<Movies> mMovies = new ArrayList();
+        ArrayList<Movies> mMovies = new ArrayList();
 
         try
         {
@@ -91,10 +90,10 @@ public class JsonUtils
 
 
 
-    public static   List<Trailers> parseTrailersJson(String json)
+    public static   ArrayList<Trailers> parseTrailersJson(String json)
     {
 
-        List<Trailers> mTrailers = new ArrayList();
+        ArrayList<Trailers> mTrailers = new ArrayList();
 
         try
         {
@@ -134,10 +133,10 @@ public class JsonUtils
 
 
 
-    public static   List<Reviews> parseReviewsJson(String json)
+    public static   ArrayList<Reviews> parseReviewsJson(String json)
     {
 
-        List<Reviews> mReviews = new ArrayList();
+        ArrayList<Reviews> mReviews = new ArrayList();
 
         try
         {

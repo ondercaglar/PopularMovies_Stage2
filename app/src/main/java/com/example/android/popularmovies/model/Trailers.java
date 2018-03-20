@@ -1,13 +1,19 @@
 package com.example.android.popularmovies.model;
 
 
-public class Trailers {
+import android.os.Parcel;
+import android.os.Parcelable;
 
+public class Trailers implements Parcelable
+{
     private String name;
     private String key;
     private String type;
 
+    public Trailers()
+    {
 
+    }
 
     public String getName() {
         return name;
@@ -33,4 +39,44 @@ public class Trailers {
     public void setType(String type) {
         this.type = type;
     }
+
+
+
+    private Trailers(Parcel in)
+    {
+        name  = in.readString();
+        key   = in.readString();
+        type  = in.readString();
+    }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeString(name);
+        dest.writeString(key);
+        dest.writeString(type);
+    }
+
+
+    public static final Parcelable.Creator<Trailers> CREATOR = new Parcelable.Creator<Trailers>()
+    {
+        @Override
+        public Trailers createFromParcel(Parcel parcel)
+        {
+            return new Trailers(parcel);
+        }
+
+        @Override
+        public Trailers[] newArray(int i)
+        {
+            return new Trailers[i];
+        }
+    };
+
 }

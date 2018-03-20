@@ -6,4 +6,9 @@
     <dimen name="image_thumbnail_spacing">1dp</dimen>
 
     <dimen name="movie_picture_size" tools:keep="@dimen/movie_picture_size">200dp</dimen>
+
+    <dimen name="detail_backdrop_height">256dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+
+
 </resources>
