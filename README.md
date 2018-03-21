@@ -1,4 +1,5 @@
-# PopularMovies Stage 2
+
+# Popular Movies Stage 2
 
 Android Developer Nanodegree Program
 
